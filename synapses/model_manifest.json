@@ -1,1 +1,11 @@
-
+{
+  "manifest_version": "1.0.0",
+  "catalog": [
+    {
+      "model_id": "bodhi_slm_micro_v1",
+      "format": "INT8_SYMMETRIC",
+      "retention": 0.965,
+      "epoch": 1
+    }
+  ]
+}
