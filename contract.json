@@ -1,20 +1,19 @@
 {
   "contract_id": "bodhi.contract.v1",
   "genesis_root": "100048777766367/contract",
-  "formula": "[q] -> [w] -> [e] -> [r] -> [t] -> [q]",
+  "derived_node": "100048777766367/distill",
+  "role": "MODEL_DISTILLATION_FOUNDRY",
   "rules": {
     "zero_pii": true,
-    "pure_triplets_only": true,
-    "byzantine_quarantine_threshold": 0.2,
-    "max_organ_timeout_seconds": 5,
+    "pure_quantized_weights_only": true,
+    "min_knowledge_retention_ratio": 0.85,
     "auto_apoptosis_on_syntax_error": true
   },
   "required_packet_fields": [
     "contract",
     "identity",
     "epoch",
-    "decision",
+    "distilled_model_cid",
     "quantum_cid"
-  ],
-  "lineage_law": "Nodes are eternally bound [m]. Dead nodes become tombstones [n] to preserve heritage."
+  ]
 }
