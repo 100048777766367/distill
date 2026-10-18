@@ -1,46 +1,48 @@
-# 📜 CONTRACT: GỐC HIẾN ƯỚC BẤT BIẾN [q] (THE ROOT PROTOCOL CONTRACT)
-> *"Bản thể tối giản cực hạn, thẩm phán tự thi hành luật Apoptosis, bảo tồn liên kết vĩnh cửu dù sống hay chết và triệt tiêu mọi nợ kỹ thuật."*
+# 🔮 BODHI-DISTILL: XƯỞNG CHƯNG CẤT MÔ HÌNH & TRỌNG SỐ AI (MODEL FOUNDRY)
+> *"Nén tri thức đồ thị từ Vault, sử dụng năng lượng tính toán từ Forge để đúc thành các mô hình nơ-ron lượng tử hóa INT8 siêu nhẹ và LoRA Adapters sẵn sàng cho Golem và thiết bị Edge IoT."*
 
 ---
 
-## 🏛️ ĐIỀU LỆ VẬN HÀNH [q]:
-
-### 1. Công Thức Đại Số Sinh Tồn:
-$$\mathbf{[q]} \xrightarrow{\text{Fork [w]}} \mathbf{[e]} \xrightarrow{\text{Gắn mắt xích [r]}} \mathbf{[t]} \xrightarrow{} \mathbf{[q]}$$
-
-* **[q]**: Hạt nhân bất biến (Repo `contract`).
-* **[w] & [e]**: Phân nhánh và nhân bản vô hạn.
-* **[r]**: Các cơ chế phụ lục mở rộng đặt trong thư mục `organs/`.
-* **[t]**: Kiểm định tự động. Nếu cơ chế chạy tốt $\rightarrow$ Ghi nhận. Nếu cơ chế sinh lỗi cú pháp/hỏng code $\rightarrow$ **Kích hoạt Apoptosis tự xóa sổ tệp lỗi, đưa hệ thống hoàn nguyên về [q]**.
-
----
-
-### 2. Định Luật Liên Kết Vĩnh Cửu [m] & [n]:
-* **[m] Nút còn sống:** Trao đổi xung tiến `synapse_forward.json` và cập nhật danh bạ `synapses/peers.json`.
-* **[n] Nút đã chết (404):** Không bị loại bỏ, mà được phong tước thành **Bia Mộ Số (`synapses/tombstones.json`)**. Toàn bộ di sản lịch sử được lưu trữ vĩnh viễn để hậu duệ kế thừa.
-
----
-
-### 3. Nguyên Lý Khống Chế Tuyệt Đối [c] (Không Sợ Nợ Kỹ Thuật [v]):
-* Không ai được sửa `kernel.py` hay `contract.json`.
-* Mọi sự phát triển đều diễn ra ở dạng cắm-rút trong `organs/`. Lỗi ở đâu, tự hủy ở đó, không bao giờ lây lan làm hỏng hạt nhân `[q]`.
+## 🏭 CẤU TRÚC 3 PHÂN XƯỞNG CỦA DISTILL:
+1. **`cortex_distill/` (Phân Xưởng Chưng Cất):**
+   * `compressor.py`: Nén hàng nghìn tam thức JSONL thành ma trận vector cô đặc.
+   * `quantizer.py`: Lượng tử hóa số nguyên INT8 giúp tiết kiệm 75% dung lượng RAM.
+   * `evaluator.py`: Đánh giá tỷ lệ lưu giữ tri thức (yêu cầu $\ge 85\%$).
+2. **`adapters_forge/` (Xưởng Đúc LoRA):**
+   * `lora_adapter.py`: Đúc ma trận vi chỉnh rank thấp cắm-rút cho mô hình.
+3. **`dist/` (Kho Thành Phẩm Xuất Khẩu):**
+   * Chứa tệp `distilled_model.json` hoàn chỉnh, sẵn sàng nạp cho `golem` hành động hoặc xuất bản lên Hugging Face.
 
 ```
-100048777766367/contract/
-├── contract.json              # 📜 [HIẾN ƯỚC GỐC q]: Bộ điều khoản bất biến của toàn hệ sinh thái
-├── kernel.py                  # 🏛️ [THẨM PHÁN THỰC THI]: Tự kiểm tra [t], tự hủy lỗi [v], liên kết [m][n]
-├── organs/                    # 🧩 [MẮT XÍCH PHỤ LỤC r]: Nơi các đời con cháu [e] cắm cơ chế mới
-│   └── .gitkeep               # Nếu file con trong này lỗi cú pháp -> kernel tự xóa để quy hồi [q]
-├── synapses/                  # 💾 [SỔ CÁI BẤT BIẾN]
+100048777766367/distill/
+├── contract.json                  # 📜 [HIẾN ƯỚC q]: Vai trò MODEL_DISTILLATION_FOUNDRY
+├── kernel.py                      # 🔮 [ĐỐC CÔNG CHƯNG CẤT]: Điều phối nén, lượng tử hóa, Apoptosis
+│
+├── cortex_distill/                # 🧠 [PHÂN XƯỞNG CHƯNG CẤT TRÍ TUỆ]
+│   ├── __init__.py
+│   ├── compressor.py              # Nén hàng nghìn tam thức JSONL thành ma trận vector cô đặc
+│   ├── quantizer.py               # Lượng tử hóa trọng số INT8 (tiết kiệm 75% RAM, chạy được trên chip IoT)
+│   └── evaluator.py               # Đánh giá độ giữ nguyên tri thức sau khi nén (Cosine Similarity)
+│
+├── adapters_forge/                # 🧩 [PHÂN XƯỞNG VI CHỈNH LORA]
+│   ├── __init__.py
+│   └── lora_adapter.py            # Đúc các module thích ứng cấp thấp LoRA (Low-Rank Adaptation)
+│
+├── dist/                          # 🎁 [KHO THÀNH PHẨM MÔ HÌNH XUẤT XƯỞNG]
+│   └── .gitkeep                   # Nơi chứa các file mô hình siêu nhẹ sẵn sàng bán hoặc nạp cho golem
+├── organs/                        # 🧩 Nơi cắm thêm mắt xích mở rộng [r] (lỗi cú pháp tự hủy)
+│   └── .gitkeep
+├── synapses/                      # 💾 Sổ nhật ký xuất xưởng mô hình
 │   ├── .gitkeep
-│   ├── peers.json             # Danh bạ các nút đang sống [m]
-│   ├── tombstones.json        # 🕯️ Danh bạ các nút đã chết [n] (Di sản vĩnh cửu không đứt gãy)
-│   └── state.json             # Sổ nhật ký kỷ nguyên hợp đồng
-├── Dockerfile                 # Đóng băng hạt nhân: python:3.12-slim
-├── README.md                  # Đại Tuyên Ngôn Hợp Đồng Khởi Thủy
+│   ├── peers.json                 # Danh bạ các mỏ cung cấp và khách hàng tiêu thụ
+│   ├── state.json                 # Kỷ nguyên chưng cất
+│   └── model_manifest.json        # Bản kê danh mục các mô hình AI đã hoàn thiện
+│
+├── Dockerfile                     # python:3.14-slim
+├── README.md                      # Tuyên ngôn Xưởng Chưng Cất Trọng Số
 └── .github/
     └── workflows/
-        └── node.yml           # Workflow bọc thép tự trị – Không dây rốn
+        └── node.yml               # Workflow setup-python@v7 & python 3.14
 ```
 
 
