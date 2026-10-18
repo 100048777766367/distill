@@ -1,41 +1,41 @@
-name: Contract Invariant Lifecycle
+name: Distill Model Foundry Lifecycle
 
 on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
   schedule:
-    - cron: '0 */4 * * *'
+    - cron: '30 */4 * * *'
 
 permissions:
   contents: write
 
 jobs:
-  run-contract:
+  run-distill:
     runs-on: ubuntu-latest
     steps:
-      # 1. KÉO CODE BẰNG SHELL GỐC
-      - name: Kéo mã nguồn hợp đồng gốc
+      # 1. KÉO CODE BẰNG LINUX SHELL GỐC
+      - name: Kéo mã nguồn Distill
         run: |
           git clone --depth 1 https://github.com/${{ github.repository }}.git .
 
-      # 2. THIẾT LẬP PYTHON ĐA TƯƠNG THÍCH
-      - name: Thiết lập môi trường Python
+      # 2. HẠ TẦNG CI/CD MỚI NHẤT: SETUP-PYTHON V7 & PYTHON 3.14
+      - name: Thiết lập môi trường Python 3.14
         uses: actions/setup-python@v7
         with:
-          python-version: '3.12'
+          python-version: '3.14'
 
-      # 3. VẬN HÀNH THẨM PHÁN HỢP ĐỒNG KERNEL.PY
-      - name: Vận hành Thẩm Phán Hợp Đồng
+      # 3. VẬN HÀNH ĐỐC CÔNG CHƯNG CẤT KERNEL.PY
+      - name: Vận hành Xưởng Chưng Cất Mô Hình
         env:
           REPO_OWNER: ${{ github.repository_owner }}
         run: python kernel.py
 
-      # 4. LƯU VẾT TÍCH BỌC THÉP VÀO GIT (CHỐNG LỖI 128, FAST-FORWARD)
-      - name: Lưu vết tích hợp đồng vào Git
+      # 4. LƯU THÀNH PHẨM VÀO GIT BỌC THÉP (FAST-FORWARD, CHỐNG LỖI 128)
+      - name: Lưu vết tích chưng cất vào Git
         run: |
-          git config --global user.name "Contract-Enforcer-Bot"
-          git config --global user.email "bot@contract.root"
+          git config --global user.name "Distill-Foundry-Bot"
+          git config --global user.email "bot@distill.foundry"
           
           # Cấp token an toàn cho chính repo này
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
@@ -46,15 +46,15 @@ jobs:
           git fetch origin "$TARGET_BRANCH"
           git reset origin/"$TARGET_BRANCH"
           
-          # Stage an toàn các thư mục
-          for d in organs synapses; do
+          # Stage an toàn tất cả các phân xưởng và thành phẩm dist/
+          for d in cortex_distill adapters_forge dist organs synapses; do
             [ -d "$d" ] && git add -A "$d"
           done
           git add contract.json synapse_forward.json 2>/dev/null || true
           
           if ! git diff --staged --quiet; then
-            git commit -m "📜 [Contract Invariant q] Bảo tồn hợp đồng gốc & Khắc cốt bia mộ #(1+N) [skip ci]"
+            git commit -m "🔮 [Distill Foundry] Chưng cất trọng số INT8 & Đúc LoRA Adapter #(1+N) [skip ci]"
             git push origin "$TARGET_BRANCH"
           else
-            echo "Hợp đồng tĩnh lặng, không có biến thiên mới."
+            echo "Xưởng chưng cất tĩnh lặng, không có biến thiên mới."
           fi
