@@ -1,6 +1,6 @@
 {
-    "model_identity": "bodhi_slm_epoch_22",
-    "epoch": 22,
+    "model_identity": "bodhi_slm_epoch_23",
+    "epoch": 23,
     "quantized_weights": {
         "quantized_matrix": [
             [
