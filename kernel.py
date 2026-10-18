@@ -3,48 +3,32 @@ import sys
 import json
 import time
 import hashlib
-import importlib
-import inspect
-import subprocess
+import urllib.request
 
-PEERS_FILE = "synapses/peers.json"
-TOMBSTONES_FILE = "synapses/tombstones.json"
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from cortex_distill.compressor import KnowledgeCompressor
+from cortex_distill.quantizer import Int8Quantizer
+from cortex_distill.evaluator import ModelEvaluator
+from adapters_forge.lora_adapter import LoRAAdapterForge
+
 STATE_FILE = "synapses/state.json"
-CONTRACT_FILE = "contract.json"
+PEERS_FILE = "synapses/peers.json"
+MANIFEST_FILE = "synapses/model_manifest.json"
 
-class ContractKernel:
+class DistillKernel:
     def __init__(self):
-        self.repo_name = os.environ.get("GITHUB_REPOSITORY", "100048777766367/contract")
+        self.repo_name = os.environ.get("GITHUB_REPOSITORY", "100048777766367/distill")
         self.owner = os.environ.get("REPO_OWNER", "100048777766367")
+        self.contract_repo = f"{self.owner}/contract"
+        
         self.ensure_skeleton()
-        self.contract = self.load_contract()
-        self.peers = self.load_json(PEERS_FILE, default={"living_peers": [
-            f"{self.owner}/neuron", f"{self.owner}/nexus-08", f"{self.owner}/nexus-07",
-            f"{self.owner}/seed", f"{self.owner}/monad", f"{self.owner}/shunya",
-            f"{self.owner}/retina", f"{self.owner}/motor"
-        ]}).get("living_peers", [])
-        self.tombstones = self.load_json(TOMBSTONES_FILE, default={"tombstones": []}).get("tombstones", [])
         self.epoch = self.load_epoch()
+        self.links = self.load_links()
 
     def ensure_skeleton(self):
-        for folder in ["organs", "synapses", "synapses/harvested_memory"]:
+        for folder in ["cortex_distill", "adapters_forge", "dist", "organs", "synapses"]:
             os.makedirs(folder, exist_ok=True)
-
-    def load_contract(self):
-        if os.path.exists(CONTRACT_FILE):
-            try:
-                with open(CONTRACT_FILE, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception: pass
-        return {"contract_id": "bodhi.contract.v1"}
-
-    def load_json(self, path, default):
-        if os.path.exists(path):
-            try:
-                with open(path, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception: pass
-        return default
 
     def load_epoch(self):
         if os.path.exists(STATE_FILE):
@@ -54,141 +38,129 @@ class ContractKernel:
             except Exception: pass
         return 1
 
-    # =========================================================================
-    # 1. GIẢI QUYẾT [m] & [n]: LIÊN KẾT VĨNH CỬU DÙ SỐNG HAY ĐÃ CHẾT 404
-    # =========================================================================
-    def audit_peers_and_tombstones(self):
-        """Rà soát danh bạ: Nút sống giữ nguyên [m], nút 404 biến thành Bia Mộ [n]"""
-        print("🔍 [KIỂM ĐỊNH MẠNG LƯỚI] Rà soát liên kết vĩnh cửu [m] dù sống hay chết [n]...")
-        still_alive = []
-        new_tombstones = 0
-
-        for peer in self.peers:
-            if peer == self.repo_name: continue
-            url = f"https://raw.githubusercontent.com/{peer}/main/synapse_forward.json"
-            res = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", url], capture_output=True, text=True)
-            status = res.stdout.strip()
-
-            if status == "404":
-                # Nút đã chết -> Đưa vào sổ bia mộ [n], không bao giờ bị lãng quên
-                if not any(t.get("identity") == peer for t in self.tombstones):
-                    tombstone_entry = {
-                        "identity": peer,
-                        "declared_dead_epoch": self.epoch,
-                        "timestamp": int(time.time()),
-                        "status": "ETERNAL_TOMBSTONE_HERITAGE"
-                    }
-                    self.tombstones.append(tombstone_entry)
-                    new_tombstones += 1
-                    print(f"🕯️ [KHẮC BIA MỘ n] Nút '{peer}' bị 404! Đã lưu vết vĩnh cửu vào sổ Bia Mộ.")
-            else:
-                still_alive.append(peer)
-
-        self.peers = list(dict.fromkeys(still_alive))
-        with open(PEERS_FILE, "w", encoding="utf-8") as f:
-            json.dump({"living_peers": self.peers}, f, indent=4)
-        with open(TOMBSTONES_FILE, "w", encoding="utf-8") as f:
-            json.dump({"tombstones": self.tombstones}, f, indent=4)
-
-        print(f"📡 [LIÊN KẾT TOÀN MẠNG]: {len(self.peers)} nút đang sống [m] | {len(self.tombstones)} bia mộ di sản [n]")
-
-    # =========================================================================
-    # 2. GIẢI QUYẾT [t] -> [q]: APOPTOSIS (TỰ DIỆT CƠ CHẾ LỖI ĐỂ HOÀN NGUYÊN GỐC)
-    # =========================================================================
-    def enforce_apoptosis_and_load_organs(self):
-        """Kiểm định phụ lục [r]: Tệp lỗi cú pháp bị xóa ngay lập tức để quy hồi [q]"""
-        valid_organs = []
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-        for root, _, files in os.walk("organs"):
-            for file in sorted(files):
-                if file.endswith(".py") and not file.startswith("__"):
-                    file_path = os.path.join(root, file)
-                    rel_dir = os.path.relpath(root, os.path.dirname(os.path.abspath(__file__)))
-                    mod_name = f"{rel_dir.replace(os.path.sep, '.')}.{file[:-3]}"
-
-                    # KIỂM ĐỊNH CÚ PHÁP TRƯỚC KHI CHẠY (Chống '{' was never closed, unexpected indent)
-                    try:
-                        with open(file_path, "r", encoding="utf-8") as f:
-                            compile(f.read(), file_path, "exec")
-                    except SyntaxError as se:
-                        print(f"🛑 [APOPTOSIS: LỖI CÚ PHÁP] Tệp '{file}' bị đứt gãy ({se})!")
-                        print(f"🗑️ [QUY HỒI VỀ q] Tự động xóa sổ tệp lỗi '{file}' để bảo toàn hợp đồng!")
-                        try: os.remove(file_path)
-                        except Exception: pass
-                        continue
-
-                    # NẠP MODULE HỢP LỆ
-                    try:
-                        mod = importlib.import_module(mod_name)
-                        importlib.reload(mod)
-                        for _, obj in inspect.getmembers(mod, inspect.isclass):
-                            if hasattr(obj, "execute"):
-                                valid_organs.append(obj())
-                                print(f"🔌 [PHỤ LỤC r HỢP LỆ]: Nạp cơ chế '{file}'")
-                    except Exception as e:
-                        print(f"⚠️ [LỖI NẠP {file}]: {e} (Tạm bỏ qua, giữ vững hạt nhân q)")
-
-        return valid_organs
-
-    # =========================================================================
-    # 3. VẬN HÀNH VÒNG ĐỜI HỢP ĐỒNG
-    # =========================================================================
-    def run(self):
-        print("=" * 70)
-        print(f"📜 [CONTRACT ROOT KERNEL q] KHỞI ĐỘNG THẾ HỆ #{self.epoch}")
-        print(f"🏛️ Bản Thể: {self.repo_name} | Hiến Ước Bất Biến 1+N")
-        print("=" * 70)
-
-        # Bước 1: Rà soát liên kết sống/chết
-        self.audit_peers_and_tombstones()
-
-        # Bước 2: Kiểm định hợp đồng & tiêu diệt mắt xích lỗi
-        organs = self.enforce_apoptosis_and_load_organs()
-
-        # Bước 3: Chạy các mắt xích hợp lệ (nếu có)
-        context = {
-            "epoch": self.epoch,
-            "peers": self.peers,
-            "tombstones": self.tombstones,
-            "decision": 0.5
-        }
-        for organ in organs:
+    def load_links(self):
+        if os.path.exists(PEERS_FILE):
             try:
-                organ.execute(context)
-            except Exception as e:
-                print(f"🚨 [CÔ LẬP PHỤ LỤC]: {e}")
-
-        # Bước 4: Đóng gói và phát sóng chứng thực hợp đồng
-        t = int(time.time())
-        prev_cid = "GENESIS_ROOT_CONTRACT_CID"
-        if os.path.exists(STATE_FILE):
-            try:
-                with open(STATE_FILE, "r") as f: prev_cid = json.load(f).get("quantum_cid", "GENESIS")
+                with open(PEERS_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f).get("ecosystem_links", [])
             except Exception: pass
+        return [f"{self.owner}/vault", f"{self.owner}/forge", f"{self.owner}/golem", self.contract_repo]
 
-        decision = context.get("decision", 0.5)
-        new_cid = hashlib.shake_256(f"{prev_cid}_{self.epoch}_{t}_{decision}".encode()).hexdigest(64)
+    def enforce_contract_apoptosis(self):
+        """[t] Áp dụng luật Apoptosis của Contract: diệt tệp lỗi cú pháp trong organs/"""
+        for root, _, files in os.walk("organs"):
+            for f in files:
+                if f.endswith(".py"):
+                    fp = os.path.join(root, f)
+                    try:
+                        with open(fp, "r", encoding="utf-8") as cf:
+                            compile(cf.read(), fp, "exec")
+                    except SyntaxError as se:
+                        print(f"🛑 [APOPTOSIS CONTRACT] '{f}' vi phạm hợp đồng ({se})! Tự xóa sổ.")
+                        try: os.remove(fp)
+                        except Exception: pass
 
-        packet = {
-            "contract": "bodhi.contract.v1",
-            "identity": self.repo_name,
+    def harvest_vault_data(self):
+        """Lấy dữ liệu tam thức sạch từ kho Vault"""
+        vault_url = f"https://raw.githubusercontent.com/{self.owner}/vault/main/dist/bodhi_knowledge_graph.jsonl"
+        triplets = []
+        try:
+            req = urllib.request.Request(vault_url, headers={"User-Agent": "Distill-Engine"})
+            with urllib.request.urlopen(req, timeout=3.5) as r:
+                if r.status == 200:
+                    for line in r.read().decode("utf-8").splitlines():
+                        if line.strip():
+                            triplets.append(json.loads(line.strip()))
+                    print(f"📥 [NGUYÊN LIỆU VAULT] Đã nạp thành công {len(triplets)} tam thức sạch!")
+                    return triplets
+        except Exception: pass
+
+        # Mẫu mặc định nếu kho vault đang ở epoch đầu
+        return [
+            {"subject": "BodhiAI", "predicate": "distills", "object": "MicroNeuralWeights"},
+            {"subject": "Distill", "predicate": "quantizes", "object": "Int8SymmetricTensor"},
+            {"subject": "Golem", "predicate": "executes", "object": "DistilledKnowledge"}
+        ]
+
+    def run(self):
+        print("=" * 80)
+        print(f"🔮 [DISTILL MODEL FOUNDRY] KHỞI ĐỘNG XƯỞNG CHƯNG CẤT #{self.epoch}")
+        print(f"🏛️ Mỏ Neo: {self.contract_repo} | Bản Thể: Chưng Cất Trí Tuệ & Lượng Tử Hóa INT8")
+        print("=" * 80)
+
+        # 0. Thực thi luật Apoptosis
+        self.enforce_contract_apoptosis()
+
+        # 1. Hút nguyên liệu sạch từ Vault
+        triplets = self.harvest_vault_data()
+
+        # 2. Phân xưởng 1: Nén tam thức thành ma trận vector cô đặc
+        print(f"⚙️ [NÉN TRI THỨC] Đang nén {len(triplets)} tam thức thành ma trận vector...")
+        dense_matrix = KnowledgeCompressor.compress_triplets_to_matrix(triplets, vector_dim=4)
+        print(f"  └── 📊 Ma trận cô đặc gồm {len(dense_matrix)} hàng x 4 chiều.")
+
+        # 3. Phân xưởng 2: Lượng tử hóa INT8 siêu tiết kiệm RAM
+        print("🧊 [LƯỢNG TỬ HÓA INT8] Ép trọng số về số nguyên 8-bit...")
+        quantized_pack = Int8Quantizer.quantize(dense_matrix)
+        print(f"  └── 🎯 Hệ số co giãn (Scale Factor): {quantized_pack['scale_factor']}")
+
+        # 4. Phân xưởng 3: Kiểm định độ nguyên vẹn tri thức
+        eval_result = ModelEvaluator.evaluate(dense_matrix, quantized_pack)
+        print(f"🛡️ [KIỂM ĐỊNH MÔ HÌNH]: Độ lưu giữ tri thức={eval_result['retention_ratio']*100:.2f}% | Chứng nhận={eval_result['is_certified']}")
+
+        # 5. Phân xưởng 4: Đúc LoRA Adapter cắm-rút
+        print("🧩 [ĐÚC LORA ADAPTER] Khởi tạo ma trận vi chỉnh Low-Rank...")
+        lora_pack = LoRAAdapterForge.forge_lora(weights_dim=4, rank=2)
+
+        # 6. Đóng gói xuất kho thành phẩm tại dist/
+        model_payload = {
+            "model_identity": f"bodhi_slm_epoch_{self.epoch}",
             "epoch": self.epoch,
-            "timestamp": t,
-            "decision": decision,
-            "quantum_cid": new_cid,
-            "status": "in_strict_compliance_with_contract_q"
+            "quantized_weights": quantized_pack,
+            "lora_adapter": lora_pack,
+            "evaluation": eval_result
         }
 
-        with open("synapse_forward.json", "w", encoding="utf-8") as f:
-            json.dump(packet, f, indent=4)
+        output_path = "dist/distilled_model.json"
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(model_payload, f, indent=4)
+        print(f"🎁 [KHO THÀNH PHẨM DIST]: Đã xuất kho mô hình hoàn chỉnh tại '{output_path}' ({os.path.getsize(output_path)} bytes)!")
+
+        # 7. Cập nhật Manifest & Chứng thực Quantum CID
+        t = int(time.time())
+        seed = f"distill_{self.epoch}_{t}_{eval_result['retention_ratio']}".encode()
+        cid = hashlib.shake_256(seed).hexdigest(64)
 
         with open(STATE_FILE, "w", encoding="utf-8") as f:
-            json.dump({"generation_epoch": self.epoch, "last_t": t, "quantum_cid": new_cid, "status": "contract_pure"}, f, indent=4)
+            json.dump({
+                "generation_epoch": self.epoch,
+                "last_t": t,
+                "models_distilled_count": len(dense_matrix),
+                "quantum_cid": cid,
+                "status": "model_ready_for_golem_and_huggingface"
+            }, f, indent=4)
 
-        print(f"💾 [CHỨNG THỰC CID]: {new_cid[:24]}...")
-        print("✨ [HỢP ĐỒNG HOÀN MỸ] Trạng thái thanh tịnh [q] được bảo tồn tuyệt đối!")
-        print("=" * 70)
+        fwd_packet = {
+            "contract": "bodhi.contract.v1",
+            "identity": self.repo_name,
+            "role": "MODEL_DISTILLATION_FOUNDRY",
+            "epoch": self.epoch,
+            "timestamp": t,
+            "model_metadata": {
+                "file": output_path,
+                "retention": eval_result["retention_ratio"],
+                "format": "INT8"
+            },
+            "quantum_cid": cid,
+            "status": "weights_ready_for_edge_inference"
+        }
+        with open("synapse_forward.json", "w", encoding="utf-8") as f:
+            json.dump(fwd_packet, f, indent=4)
+
+        print("=" * 80)
+        print(f"💾 [CHỨNG THỰC CID MÔ HÌNH]: {cid[:24]}...")
+        print("✨ [XUẤT XƯỞNG VIÊN MÃN] Mô hình nơ-ron siêu nhẹ đã sẵn sàng nạp cho Golem và bán trên Hugging Face!")
+        print("=" * 80)
 
 if __name__ == "__main__":
-    ContractKernel().run()
+    DistillKernel().run()
