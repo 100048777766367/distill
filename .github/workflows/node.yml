@@ -1,0 +1,60 @@
+name: Contract Invariant Lifecycle
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */4 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  run-contract:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. KÉO CODE BẰNG SHELL GỐC
+      - name: Kéo mã nguồn hợp đồng gốc
+        run: |
+          git clone --depth 1 https://github.com/${{ github.repository }}.git .
+
+      # 2. THIẾT LẬP PYTHON ĐA TƯƠNG THÍCH
+      - name: Thiết lập môi trường Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      # 3. VẬN HÀNH THẨM PHÁN HỢP ĐỒNG KERNEL.PY
+      - name: Vận hành Thẩm Phán Hợp Đồng
+        env:
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: python kernel.py
+
+      # 4. LƯU VẾT TÍCH BỌC THÉP VÀO GIT (CHỐNG LỖI 128, FAST-FORWARD)
+      - name: Lưu vết tích hợp đồng vào Git
+        run: |
+          git config --global user.name "Contract-Enforcer-Bot"
+          git config --global user.email "bot@contract.root"
+          
+          # Cấp token an toàn cho chính repo này
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          
+          TARGET_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          [ "$TARGET_BRANCH" = "HEAD" ] || [ -z "$TARGET_BRANCH" ] && TARGET_BRANCH="main"
+
+          git fetch origin "$TARGET_BRANCH"
+          git reset origin/"$TARGET_BRANCH"
+          
+          # Stage an toàn các thư mục
+          for d in organs synapses; do
+            [ -d "$d" ] && git add -A "$d"
+          done
+          git add contract.json synapse_forward.json 2>/dev/null || true
+          
+          if ! git diff --staged --quiet; then
+            git commit -m "📜 [Contract Invariant q] Bảo tồn hợp đồng gốc & Khắc cốt bia mộ #(1+N) [skip ci]"
+            git push origin "$TARGET_BRANCH"
+          else
+            echo "Hợp đồng tĩnh lặng, không có biến thiên mới."
+          fi

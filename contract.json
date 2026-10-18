@@ -1,0 +1,20 @@
+{
+  "contract_id": "bodhi.contract.v1",
+  "genesis_root": "100048777766367/contract",
+  "formula": "[q] -> [w] -> [e] -> [r] -> [t] -> [q]",
+  "rules": {
+    "zero_pii": true,
+    "pure_triplets_only": true,
+    "byzantine_quarantine_threshold": 0.2,
+    "max_organ_timeout_seconds": 5,
+    "auto_apoptosis_on_syntax_error": true
+  },
+  "required_packet_fields": [
+    "contract",
+    "identity",
+    "epoch",
+    "decision",
+    "quantum_cid"
+  ],
+  "lineage_law": "Nodes are eternally bound [m]. Dead nodes become tombstones [n] to preserve heritage."
+}
