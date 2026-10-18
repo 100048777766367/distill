@@ -2,13 +2,13 @@
     "contract": "bodhi.contract.v1",
     "identity": "100048777766367/distill",
     "role": "MODEL_DISTILLATION_FOUNDRY",
-    "epoch": 24,
-    "timestamp": 1792314630,
+    "epoch": 25,
+    "timestamp": 1792314647,
     "model_metadata": {
         "file": "dist/distilled_model.json",
         "retention": 0.0,
         "format": "INT8"
     },
-    "quantum_cid": "58e6831cac6faae53cf8c93d67d9028e9b8e933657ea5cf99389159d22d8b97441c5229b27c7dc7b4c200f1db940d4597a7af3baf2afaab4ab38c7159427188d",
+    "quantum_cid": "2abab10df64b2b784f47de3d7fb8dcd8ee908b108358e5b8cd4a72b3fcce24a80d1fff3cb3627ac60f0273e3e4c0e0369996d8b1bce565cf91720c842a4a97a1",
     "status": "weights_ready_for_edge_inference"
 }
