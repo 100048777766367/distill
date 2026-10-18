@@ -1,7 +1,6 @@
 {
-    "model_identity": "bodhi_slm_epoch_26",
-    "epoch": 26,
-    "quantized_weights": {
+    "epoch": 27,
+    "quantized": {
         "quantized_matrix": [
             [
                 49,
@@ -31,7 +30,7 @@
         "scale_factor": 954.262926,
         "format": "INT8_SYMMETRIC"
     },
-    "lora_adapter": {
+    "lora": {
         "lora_rank": 2,
         "matrix_a": [
             [
@@ -68,7 +67,7 @@
         "alpha": 1.0,
         "adapter_type": "STANDALONE_MICRO_LORA"
     },
-    "evaluation": {
+    "eval": {
         "mean_absolute_error": 203.9497,
         "retention_ratio": 0.0,
         "is_certified": false

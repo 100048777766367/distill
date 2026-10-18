@@ -1,7 +1,6 @@
 {
-    "generation_epoch": 26,
-    "last_t": 1792314718,
-    "models_distilled_count": 4,
-    "quantum_cid": "98bc810b9483cbbff228f8cf13baf4155aad92a6a59d7b0844b1b7a2312d29971d3a8ab8a8b4aa967fddd29b72cfc9cd1fff1fe8b02511ee11e79e0982ec608d",
-    "status": "model_ready_for_golem_and_huggingface"
+    "generation_epoch": 27,
+    "last_t": 1792315153,
+    "quantum_cid": "b3cb1324115fe3b50e39b7a7c4ca16cddeb21ee686eb6ffb7cfde9f34abc9e64",
+    "status": "one_shot_running"
 }
