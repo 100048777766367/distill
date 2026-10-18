@@ -1,6 +1,7 @@
 {
-    "generation_epoch": 19,
-    "last_t": 1792314358,
-    "quantum_cid": "287b63e13dd806b1b2da9e307dd6c3b1fc688250f5ee0c6e044838511cffe248dda3061537d27b87e19d75e680773ad8aec423cf6384191156e74943b4acc0d4",
-    "status": "contract_pure"
+    "generation_epoch": 20,
+    "last_t": 1792314385,
+    "models_distilled_count": 4,
+    "quantum_cid": "c4975417384077cfdfd66f54afcec649657e74840825a3f1c35ff8aefd68ac5d85c664f40b0bc672d1cfc89df1dd619f98b8b889f32c728cc0c46c175ce7359f",
+    "status": "model_ready_for_golem_and_huggingface"
 }

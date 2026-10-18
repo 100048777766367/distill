@@ -1,9 +1,14 @@
 {
     "contract": "bodhi.contract.v1",
     "identity": "100048777766367/distill",
-    "epoch": 19,
-    "timestamp": 1792314358,
-    "decision": 0.5,
-    "quantum_cid": "287b63e13dd806b1b2da9e307dd6c3b1fc688250f5ee0c6e044838511cffe248dda3061537d27b87e19d75e680773ad8aec423cf6384191156e74943b4acc0d4",
-    "status": "in_strict_compliance_with_contract_q"
+    "role": "MODEL_DISTILLATION_FOUNDRY",
+    "epoch": 20,
+    "timestamp": 1792314385,
+    "model_metadata": {
+        "file": "dist/distilled_model.json",
+        "retention": 0.0,
+        "format": "INT8"
+    },
+    "quantum_cid": "c4975417384077cfdfd66f54afcec649657e74840825a3f1c35ff8aefd68ac5d85c664f40b0bc672d1cfc89df1dd619f98b8b889f32c728cc0c46c175ce7359f",
+    "status": "weights_ready_for_edge_inference"
 }
